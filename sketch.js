@@ -1,40 +1,128 @@
+// const path = require('path');
+// const express = require('express');
+// const fs = require('fs');
+// const e = require('express');
 
+// const app = express();
 
-const HEIGHT = 500
-const LENGTH = 1000
+const PORT = 5502;
+
+let song = new Audio('./assets/song.mp3')
+song.isplaying = false;
+
+let flipImage = 1;
+let interaction = false;
+//numSegments something needs to fix
+let numSegments = 3;
+let direction = 'HALT';
+
+const xStart = 0; //starting x coordinate for snake
+const yStart = 250; //starting y coordinate for snake
+const diff = 10;
+
+let xCor = [];
+let yCor = [];
+
+let xFruit = 0;
+let yFruit = 0;
+let scoreElem;
+
+const HEIGHT = 600
+const LENGTH = 800
+
+var bgImg;
+var charImg;
+var backgroundXStart1 = 0;
+var backgroundXStart2;
+var backgroundMove = +1
+var scrollSpeed = 4;
+
+function preload(){
+  bgImg = loadImage('./assets/background.png');
+  charImg = loadImage('./assets/sprite.gif');
+}
+
 
 function setup() {
+  //backgroundXStart1 defaults to 0; backgroundXStart2 will define where the next scroll image will begin.
+  backgroundXStart2 = LENGTH;
   scoreElem = createDiv('Score = 0');
   scoreElem.position(20, 20);
   scoreElem.id = 'score';
   scoreElem.style('color', 'white');
 
+  createCanvas(LENGTH, HEIGHT);
 
-  createCanvas(LENGTH,HEIGHT);
-  frameRate(15);
+  frameRate(30);
   stroke(255);
   strokeWeight(10);
-  // for (let i = 0; i < numSegments; i++) {
-  //   xCor.push(xStart + i * diff);
-  //   yCor.push(yStart);
-  // }
 }
+
+
 function draw() {
-  background(150);
-  textSize(32);
+
+
+  image(bgImg, backgroundXStart1, 0, width, height);
+  image(bgImg, backgroundXStart2, 0, width, height);
+  //where change the circle into a character picture that loaded before
+  image(charImg, (LENGTH/2)-20, HEIGHT*.85, 80, 80);
+  
+  if (Math.abs(backgroundXStart1 - backgroundXStart2) !== 800) console.log("WHOOP WHOOP!", Math.abs(backgroundXStart1 - backgroundXStart2))
+  backgroundXStart1 -= scrollSpeed*backgroundMove;
+  backgroundXStart2 -= scrollSpeed*backgroundMove;
+  
+
+
+
+  //catch cases for new image render start position
+  //if image start position is 1 width left of (0,0) set it to be (length, 0)
+  if (backgroundXStart1 < -LENGTH + scrollSpeed){
+    backgroundXStart1 = LENGTH;
+  }
+  if (backgroundXStart2 < -LENGTH + scrollSpeed){
+    backgroundXStart2 = LENGTH;
+  }
+  if(backgroundXStart2 > LENGTH) {
+    backgroundXStart2 = - LENGTH+scrollSpeed;
+  }
+  if(backgroundXStart1 > LENGTH) {
+    backgroundXStart1 = - LENGTH+scrollSpeed;
+  }
+ if (direction != "HALT") console.log(backgroundXStart1, backgroundXStart2);
+  updateDirection();
+
 
 }
 
 
 
 function mouseReleased(){//update each click
- redraw()
+ console.log(direction);
 }
 
-function keyPressed() {//quit with left arrow
-  if (keyCode === LEFT_ARROW) {
-    noLoop();
 
+
+function updateDirection() {
+  switch (direction) {
+    case 'right':
+      console.log('RIGHT_ARROW')
+      //xCor[numSegments - 1] = xCor[numSegments - 2] + diff;
+      //yCor[numSegments - 1] = yCor[numSegments - 2];
+      backgroundMove = +1;
+      break;
+    // case 'up':
+    //   xCor[numSegments - 1] = xCor[numSegments - 2];
+    //   yCor[numSegments - 1] = yCor[numSegments - 2] - diff;
+      //break;
+    case 'left':
+      console.log('LEFT_ARROW')
+      //xCor[numSegments - 1] = xCor[numSegments - 2] - diff;
+      //yCor[numSegments - 1] = yCor[numSegments - 2];
+      backgroundMove = -1;
+      break;
+    case 'HALT':
+      backgroundMove = 0;
+      break;
   }
 }
 
@@ -42,53 +130,19 @@ function keyPressed() {//quit with left arrow
 
 
 
-
-// colorSliderR = createSlider(0,255)
-  // colorSliderR.position(100, 500);
-  // colorSliderR.style('width', '50px');
-
-  // colorSliderG = createSlider(0,255)
-  // colorSliderG.position(150, 500);
-  // colorSliderG.style('width', '50px');
-
-  // colorSliderB = createSlider(0,255)
-  // colorSliderB.position(200, 500);
-  // colorSliderB.style('width', '50px');
-
-  // moverProjectionSlider = createSlider(0,255)
-  // moverProjectionSlider.position(10,520)
-  // moverProjectionSlider.style('width','100px')
-
-  // moverAngleSlider = createSlider(0,255)
-  // moverAngleSlider.position(110,520)
-  // moverAngleSlider.style('width','100px')
-
-  // button = createButton('Pars');
-  // button.position(10, 550);
-  // button.mousePressed(()=>{
-  //  colorSliderR.value(groupPars.rgbFunction[0])
-  // colorSliderG.value(groupPars.rgbFunction[1])
-  //  colorSliderB.value(groupPars.rgbFunction[2])
-  //   buttonSelection = groupPars
-  //   console.log(`button selection = ${buttonSelection}`)
-
-  // })
-
-  // button = createButton('Movers');
-  // button.position(110, 550);
-  // button.mousePressed(()=>{
-  //   colorSliderR.value(groupMovers.rgbFunction[0])
-  //   colorSliderG.value(groupMovers.rgbFunction[1])
-  //    colorSliderB.value(groupMovers.rgbFunction[2])
-  //   buttonSelection = groupMovers
-  //   console.log(`button selection = ${buttonSelection}`)
-  // })
-  ;
-
-
-
-
-
-
-
+function keyPressed() {
+  if (interaction === false){
+    song.play();
+    interaction = true;
+  }
+  if (keyCode === LEFT_ARROW) {
+    direction = 'left';
+  } else if (keyCode === RIGHT_ARROW) {
+    direction = 'right';
+  } else if (keyCode === RETURN){
+    direction = 'HALT';
+    song.pause();
+    interaction = false
+  }
+}
 
